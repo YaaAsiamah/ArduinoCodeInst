@@ -1,0 +1,52 @@
+
+% Given data
+R1 = 100000;
+R2 = 100000;
+Vi=9.88;
+V25=5.34;
+V35=3.89;
+Ra=10000;
+R25 =((V25/Vi)*Ra)/(1-((V25/Vi))); % Resistance at 25°C (Ohms)
+R35 = ((V35/Vi)*Ra)/(1-((V35/Vi)));  % Resistance at 35°C (Ohms)
+R3 = R25;
+T25 = 25 + 273.15; % Temperature at 25°C in Kelvin
+T35 = 35 + 273.15; % Temperature at 35°C in Kelvin
+beta = log(R35/R25) / ((1/T35) - (1/T25)); % Calculate beta
+
+% Temperature range
+T = 25:0.01:35; % Temperature range from 25°C to 35°C with 1°C step
+
+% Initialize arrays for storing results
+R_thermistor = zeros(size(T)); % Thermistor resistance
+v_out = zeros(size(T)); % Output voltage
+
+% Calculate values for each temperature
+for i = 1:length(T)
+    % Thermistor resistance as a function of temperature
+    R_thermistor(i) = R25 * exp(beta * ((1 / (T(i) + 273.15)) - (1 / T25)));
+    
+    % Total resistance in the bridge
+    R4 = R_thermistor(i);
+    
+    % Output voltage of the Wheatstone bridge
+    v_out(i) = (100/15)*(5 * ((R3 / R4 - R1 / R2) / ((1 + R3 / R4) * (1 + R1 / R2))));
+   
+end
+
+% Plotting the output voltage
+figure;
+plot(T, v_out);
+xlabel('Temperature (°C)');
+ylabel('Output Voltage (V)');
+title('Wheatstone Bridge Output Voltage vs Temperature');
+grid on;
+hold on;
+
+p=polyfit(T,v_out,1);
+
+V1=polyval(p,T);
+plot(T,V1);
+
+J=sum((V1-v_out).^2);
+S=sum((v_out-mean(v_out)).^2);
+r_sq=1-(J/S)
